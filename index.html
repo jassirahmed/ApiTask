@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CRUD Application using JavaScript</title>
+    <link rel="stylesheet" href="css/bootstrap/css/bootstrap.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0px;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        tr,
+        td {
+            text-align: center;
+        }
+
+        .mybody {
+            padding: 35px;
+            background-color: #da6285;
+
+        }
+
+        .mycontent {
+            background-color: #3b1050;
+            border: 1px solid transparent;
+            border-radius: 15px;
+            color: #da6285;
+            box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.75);
+        }
+
+        thead,
+        tbody {
+            color: #da6285;
+        }
+
+        tr {
+            border-color: #da6285;
+        }
+
+        .btn-secondary {
+            color: #3b1050;
+            background-color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mybody">
+        <div class="mycontent">
+            <div class="d-flex bd-highlight m-3">
+                <div class="me-auto p-2 bd-highlight">
+                    <h2>Hello ReqRes users!
+                </div>
+                <div class="p-2 bd-highlight">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="addAndEditDetails(null,'add')">+Add</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Avatar</th>
+                            <th scope="col">First Name</th>
+                            <th scope="col">Last Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Edit</th>
+                            <th scope="col">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mytable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" id="myForm" onsubmit="return detailsSubmitFun(event)">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel"><span id="modalTitle">Add</span> Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body row">
+                    <div class="input col">
+                        <label for="fname">Name</label>
+                        <input type="text" value="" id="fname" maxlength="10">
+                        <p id="fnameerr"></p>
+                    </div>
+                    <div class="input col">
+                        <label for="lname">Jobs</label>
+                        <input type="text" value="" id="job" maxlength="10">
+                        <p id="joberr"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script src="js/jquery.js"></script>
+<script src="css/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+    var myModal = new bootstrap.Modal(document.getElementById('staticBackdrop'), {
+        keyboard: false
+    })
+</script>
+<script>
+    var editModal;
+    function loadTable() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://reqres.in/api/users?page=2", true);
+        xhr.onload = function () {
+            const objects = JSON.parse(xhr.responseText);
+            console.log("responseText", objects);
+
+            var data = objects.data;
+            console.log("data", data);
+
+            document.getElementById("mytable").innerHTML = "";
+            for (let index = 0; index < data.length; index++) {
+                const element = data[index];
+
+                var row = document.createElement("TR");
+                var tn = document.createElement("TD");
+                tn.innerHTML = index + 1;
+
+                var avatarTD = document.createElement("TD");
+                var imgTag = document.createElement("IMG");
+                imgTag.src = element.avatar;
+                avatarTD.append(imgTag);
+
+                var fnameTD = document.createElement("TD");
+                fnameTD.innerHTML = element.first_name;
+
+                var lnameTD = document.createElement("TD");
+                lnameTD.innerHTML = element.last_name;
+
+                var emailTD = document.createElement("TD");
+                emailTD.innerHTML = element.email;
+
+                var editTD = document.createElement("TD");
+                var editbtn = "<button class='btn btn-primary' onclick='addAndEditDetails(" + JSON.stringify(element) +
+                    ",\"edit\")'> Edit </button>";
+                editTD.innerHTML = editbtn;
+
+                var delTD = document.createElement("TD");
+                var delbtn = "<button class='btn btn-danger' onclick='delfun(" + JSON.stringify(element) +
+                    ")'> Delete </button>";
+                delTD.innerHTML = delbtn;
+
+                row.append(tn, avatarTD, fnameTD, lnameTD,
+                    emailTD, editTD, delTD);
+
+                document.getElementById("mytable").append(row);
+            }
+        };
+        xhr.send();
+    }
+
+    loadTable();
+
+    function delfun(getElm) {
+        var rootUrl = "https://reqres.in/api/users/" + getElm.id;
+        var del = new XMLHttpRequest();
+        del.open("DELETE", rootUrl, true);
+        del.onload = function () {
+            console.log("check", del.responseText);
+            alert("Deleted Successfully");
+            loadTable();
+        };
+        del.send();
+    }
+
+    function addAndEditDetails(getObj, secModal) {
+        myModal.show();
+        if (secModal == "add") {
+            document.getElementById("myForm").reset();
+            document.getElementById("modalTitle").innerHTML = "Add";
+            editModal = false;
+            console.log('secModal', secModal);
+        } else {
+            editModal = true;
+            selectedObj = getObj;
+            console.log('selectedObj', selectedObj);
+        }
+    }
+    function detailsSubmitFun(event) {
+        event.preventDefault();
+        var fnameval = document.getElementById('fname').value;
+        var jobval = document.getElementById('job').value;
+        console.log("editModal", editModal);
+
+        if (editModal) {
+            var rootUrlEdit = "https://reqres.in/api/users" + selectedObj.id;
+            var edit = new XMLHttpRequest();
+            edit.open("PUT", rootUrlEdit, true);
+            edit.onload = function () {
+                console.log("check", edit.responseText);
+                document.getElementById("modalTitle").innerHTML = "Edit";
+                console.log('selectedObj', selectedObj);
+                alert("Edited Successfully");
+
+            }
+            edit.send();
+
+        } else {
+            var rootUrlAdd = "https://reqres.in/api/users";
+            var newObj = {
+                "name": fnameval,
+                "job": jobval,
+            };
+            var put = new XMLHttpRequest();
+            put.open("POST", rootUrlAdd, true);
+            put.onload = function () {
+                console.log("check", put.responseText);
+                alert("Added Successfully");
+            };
+            put.send(JSON.stringify(newObj));
+        }
+        loadTable();
+        document.getElementById("myForm").reset();
+        myModal.hide();
+    }
+
+</script>
+
+</html>
